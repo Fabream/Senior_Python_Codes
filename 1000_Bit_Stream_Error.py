@@ -1,46 +1,56 @@
 #########################################################################################
+# Version 0.1
+#
+# Fabrizzio Arguello
+# Date:02/12/2025
+#
+# Description: Checks N bits error from signal transmission
+#
+#########################################################################################
 
+#Libraries Used
 import numpy as np
 
+#Constants
+BIT_AMOUNT = 10000 #size of bit stream
+POWER = 10**-7 #excpeted POWER output from signal
+trials = 10000
+error_rate = []
 
-num_bits = 10000
-bits = np.random.randint(0, 2, num_bits)                # Takes num_bits and build
-print(type(bits))
-print(bits)
+for val in range(trials):
 
-# Step 2: Define transmission voltage based on power
-power = 10**-7                                         # Given power threshold
-voltage = np.sqrt(power)                               # Voltage recived at the reciever
+    bits = np.random.randint(0, 2, BIT_AMOUNT)   # A random bit array is made based on bit amount
 
-# print(voltage)
+    voltage = np.sqrt(POWER)                               # Voltage received from POWER output of signal
 
-threshold = voltage / 2                                # Detection threshold at half the voltage
+    threshold = voltage / 2                                # For simplistic reason threshold will be half the voltage
+                                                           # for detection
 
-#print(threshold)
+    t_sig = bits * voltage                                 # transmitted signal with correct amplitude
 
-# Step 3: Multiply bits by voltage
-transmitted_signal = bits * voltage  # 0 remains 0, 1 becomes sqrt(10^-7)
+    #Generate an array of noise values
+    noise_var = POWER / 10                                 # Variance of noise signal
+    noise = np.random.normal(0, np.sqrt(noise_var), BIT_AMOUNT)  #array made with mean = 0, variance, array size
 
-# Step 4: Generate Gaussian noise with proper variance
-noise_variance = power / 10  # Adjusted variance based on professor's notes
-noise = np.random.normal(0, np.sqrt(noise_variance), num_bits)  # Proper scaling of noise
+    #Received Signal function with signal amplitude and added noise
+    r_sig = t_sig + noise
 
-# Display first 20 noise values
-# print("Generated Noise (First 20 samples):", noise[:20])
+    decoded_bits = []                                       #Create an empty list
+    error_cnt = 0                                           #Initialize error count
 
-# Step 5: Add Gaussian noise to transmitted signal
-received_signal = transmitted_signal + noise
+    #Iterate through the bits and decode than given the threshold set
+    for i in range(BIT_AMOUNT):
+        if r_sig[i] >= threshold:
+            decoded_bits.append(int(1))                     #add 1 to the list if bigger than threshold
+        else:
+            decoded_bits.append(int(0))                     #add  to the list if lesser than threshold
 
-# Step 6: Detection threshold
-decoded_bits = (received_signal >= threshold).astype(int)  # Logical operation for decision
+        if decoded_bits[i] != bits[i]:
+            error_cnt += 1                                  #count the error of decoded bits that don't match bit stream
 
-# Step 7: Compute Bit Error Rate (BER)
-bit_errors = np.sum(decoded_bits != bits)
-ber = bit_errors / num_bits
+    #Error count list
+    error_rate.append((error_cnt / BIT_AMOUNT) * 100)
 
-# # Display results
-print("Transmitted Bits:", bits[:20])  # Show first 20 transmitted bits
-print("Received Signal:", received_signal[:20])  # Show first 20 received signals
-print("Decoded Bits:", decoded_bits[:20])  # Show first 20 decoded bits
-print(f"Total Bit Errors: {bit_errors}")
-print(f"Bit Error Rate (BER): {ber:.5f}")
+#Results:
+print(error_rate)
+print(f'Average Percentage Error of Signal Transmission: {np.mean(error_rate):.3f}%')
