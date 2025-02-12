@@ -14,8 +14,9 @@ import numpy as np
 #Constants
 BIT_AMOUNT = 1000 #size of bit stream
 POWER = 10**-7 #excpeted POWER output from signal
-TRIALS = 1000
-error_rate = []
+TRIALS = 1000 #total number of trials
+
+error_rate = [] #Create empty list
 
 for val in range(TRIALS):
 
