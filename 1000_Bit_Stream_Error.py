@@ -1,5 +1,5 @@
 #########################################################################################
-# Version 0.1
+# Version 0.3
 #
 # Fabrizzio Arguello
 # Date:02/12/2025
@@ -12,12 +12,12 @@
 import numpy as np
 
 #Constants
-BIT_AMOUNT = 10000 #size of bit stream
+BIT_AMOUNT = 1000 #size of bit stream
 POWER = 10**-7 #excpeted POWER output from signal
-trials = 10000
+TRIALS = 1000
 error_rate = []
 
-for val in range(trials):
+for val in range(TRIALS):
 
     bits = np.random.randint(0, 2, BIT_AMOUNT)   # A random bit array is made based on bit amount
 
@@ -52,5 +52,5 @@ for val in range(trials):
     error_rate.append((error_cnt / BIT_AMOUNT) * 100)
 
 #Results:
-print(error_rate)
-print(f'Average Percentage Error of Signal Transmission: {np.mean(error_rate):.3f}%')
+print(f'\n{error_rate}')
+print(f'\nAverage Percentage Error of Signal Transmission: {np.mean(error_rate):.3f}%')
