@@ -10,70 +10,61 @@
 
 #Libraries Used
 import numpy as np
-import pandas as pd
-import openpyxl as xl
+import matplotlib.pyplot as plt
 
-#Constants
-BIT_AMOUNT = 100                                         #size of bit stream
-POWER = 10**-7                                             #excpeted POWER output from signal
-TRIALS = 1000                                              #total number of trials
+# Constants
+BIT_AMOUNT = 100000  # Increased bit count for better accuracy
+POWER = 10 ** -7  # Signal power (can be changed independently)
+NOISE_POWER = 10 ** -8  # Fixed noise power (does not change with SNR)
+SNR_RANGE = np.arange(0, 51, 2)  # Increased SNR range
+TRIALS = 1000  # Number of trials per SNR
 
-error_rate = [] #Create empty list
-t_sig_list = []
-r_sig_list = []
+# Lists to store BER results
+error_rate = []
 
+# Simulate BER for each SNR
+for snr_db in SNR_RANGE:
+    total_errors = 0
 
-SNR = 70
+    for _ in range(TRIALS):
+        bits = np.random.randint(0, 2, BIT_AMOUNT)  # Generate random bit sequence
 
-for val in range(0,SNR,1):
+        # Convert SNR from dB to linear scale
+        snr_linear = 10 ** (snr_db / 10)
 
-    bits = np.random.randint(0, 2, BIT_AMOUNT)   # A random bit array is made based on bit amount
-    print(bits)
+        # Set fixed noise variance
+        noise_var = NOISE_POWER  # Noise power stays constant
 
-    voltage = np.sqrt(POWER)                               # Voltage received from POWER output of signal
+        # Adjust only signal power to control SNR
+        signal_power = POWER * snr_linear
+        voltage = np.sqrt(signal_power)  # Signal voltage
+        threshold = voltage / 2  # Decision threshold
 
-    threshold = voltage / 2                                # For simplistic reason threshold will be half the voltage
-                                                           # for detection
+        # Channel gain (still modeled as √SNR)
+        channel = np.sqrt(snr_linear)
 
-    t_sig=(bits * voltage)    # transmitted signal with correct amplitude
-    print(t_sig)
+        # Generate noise (Gaussian with fixed variance)
+        noise = np.random.normal(0, np.sqrt(noise_var), BIT_AMOUNT)
 
+        # Received signal
+        r_sig = channel * (bits * voltage) + noise
 
-    channel = np.sqrt(val)
-    print(channel)
+        # Decode received bits
+        decoded_bits = (r_sig >= threshold).astype(int)
 
+        # Count bit errors
+        total_errors += np.sum(decoded_bits != bits)
 
-    #Generate an array of noise values
-    noise_var = POWER                       # Variance of noise signal
-    noise = np.random.normal(0,noise_var, BIT_AMOUNT)  #array made with mean = 0, variance, array size
+    # Compute BER
+    ber = total_errors / (BIT_AMOUNT * TRIALS)
+    error_rate.append(ber)
 
-    #Received Signal function with signal amplitude and added noise
-    r_sig = channel*t_sig + noise
-    print(r_sig)
-
-    decoded_bits = []                                       #Create an empty list
-    error_cnt = 0                                           #Initialize error count
-
-    #Iterate through the bits and decode than given the threshold set
-    for i in range(BIT_AMOUNT):
-        if r_sig[i] >= threshold:
-            decoded_bits.append(int(1))                     #add 1 to the list if bigger than threshold
-        else:
-            decoded_bits.append(int(0))                     #add  to the list if lesser than threshold
-
-        if decoded_bits[i] != bits[i]:
-            error_cnt += 1                                  #count the error of decoded bits that don't match bit stream
-
-    t_sig_list.append(t_sig)
-    r_sig_list.append(r_sig)
-
-    #Error count list
-    error_rate.append((error_cnt / BIT_AMOUNT))
-
-#Results:
-dt = pd.DataFrame(t_sig_list).T
-dt.to_excel('signal.xlsx',index=False, sheet_name='Signal')
-dr = pd.DataFrame(r_sig_list).T
-dr.to_excel('real.xlsx',index=False, sheet_name='Real')
-print(f'\n{error_rate}')
-print(f'\nAverage Percentage Error of Signal Transmission: {np.mean(error_rate):.3f}%')
+# Plot BER vs. SNR
+plt.figure(figsize=(8, 6))
+plt.semilogy(SNR_RANGE, error_rate, marker='x', linestyle='-', color='b', label="BER")
+plt.xlabel('SNR (dB)')
+plt.ylabel('Bit Error Rate (BER)')
+plt.title('BER vs. SNR with Fixed Noise Power')
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.legend()
+plt.show()
