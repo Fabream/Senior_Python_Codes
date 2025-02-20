@@ -15,7 +15,7 @@ import pandas as pd
 import openpyxl as xl
 
 # Constants
-BIT_AMOUNT = 1000000  # Increased bit count for better accuracy
+BIT_AMOUNT = 10000000  # Increased bit count for better accuracy
 SIG_POWER = 10 ** -9  # Signal power (can be changed independently)
 NOISE_POWER = 10 ** -7  # Fixed noise power (does not change with SNR)
 SNR_RANGE = np.arange(2, 51, 2)  # Increased SNR range
